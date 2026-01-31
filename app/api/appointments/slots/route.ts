@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { generateSlotsForDate } from '@/lib/appointments';
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const date = searchParams.get('date');
+
+  if (!date) {
+    return NextResponse.json({ error: 'Datum fehlt' }, { status: 400 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json(
+      { error: 'Supabase-Umgebungsvariablen fehlen. Bitte konfigurieren.' },
+      { status: 503 }
+    );
+  }
+
+  const supabase = createRouteHandlerClient({ cookies });
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('time, status')
+    .eq('date', date)
+    .neq('status', 'cancelled');
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const bookedTimes = (data ?? []).map((a) => a.time.slice(0, 5));
+  const slots = generateSlotsForDate(date, bookedTimes);
+
+  return NextResponse.json({ slots });
+}
