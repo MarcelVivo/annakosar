@@ -8,7 +8,10 @@ export async function GET(req: NextRequest) {
   const date = searchParams.get('date');
 
   if (!date) {
-    return NextResponse.json({ error: 'Datum fehlt' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Datum fehlt' },
+      { status: 400 }
+    );
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,16 +19,28 @@ export async function GET(req: NextRequest) {
 
   if (!supabaseUrl || !supabaseKey) {
     return NextResponse.json(
-      { error: 'Supabase-Umgebungsvariablen fehlen. Bitte konfigurieren.' },
+      { error: 'Supabase-Umgebungsvariablen fehlen' },
       { status: 503 }
     );
   }
+
+  const cookieStore = cookies();
 
   const supabase = createServerClient(
     supabaseUrl,
     supabaseKey,
     {
-      cookies: () => cookies(),
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+        }
+      }
     }
   );
 
@@ -36,7 +51,10 @@ export async function GET(req: NextRequest) {
     .neq('status', 'cancelled');
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    );
   }
 
   const bookedTimes = (data ?? []).map((a) => a.time.slice(0, 5));

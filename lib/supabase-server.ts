@@ -1,68 +1,24 @@
-import { cookies, headers } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export function createSupabaseServerClient() {
+  const cookieStore = cookies()
 
-const createCookieAdapter = (cookieStore: ReturnType<typeof cookies>) => ({
-  get(name: string) {
-    return cookieStore.get(name)?.value;
-  },
-  set(name: string, value: string, options: CookieOptions) {
-    cookieStore.set({ name, value, ...options });
-  },
-  remove(name: string, options: CookieOptions) {
-    cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-  }
-});
-
-const headerAdapter = {
-  get(name: string) {
-    return headers().get(name) ?? undefined;
-  }
-};
-
-export const getSupabaseRouteClient = () =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: createCookieAdapter(cookies()),
-    headers: headerAdapter
-  });
-
-export const getSupabaseServerComponentClient = () =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: createCookieAdapter(cookies()),
-    headers: headerAdapter
-  });
-
-export const getSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
-  createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return req.cookies.get(name)?.value;
-      },
-      set(name: string, value: string, options: CookieOptions) {
-        res.cookies.set({ name, value, ...options });
-      },
-      remove(name: string, options: CookieOptions) {
-        res.cookies.set({ name, value: '', ...options, maxAge: 0 });
-      }
-    },
-    headers: {
-      get(name: string) {
-        return req.headers.get(name) ?? undefined;
-      }
-    }
-  });
-
-export const getSupabaseServiceRoleClient = () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
-  return createClient(
-    supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: { autoRefreshToken: false, persistSession: false }
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 })
+        },
+      },
     }
-  );
-};
+  )
+}
