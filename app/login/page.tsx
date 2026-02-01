@@ -13,6 +13,9 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -49,6 +52,11 @@ export default function LoginPage() {
 
   const handleSignup = async () => {
     resetMessages();
+    if (password !== confirmPassword) {
+      setError('Passwörter stimmen nicht überein.');
+      return;
+    }
+
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
     if (signUpError) {
       setError(signUpError.message);
@@ -63,7 +71,7 @@ export default function LoginPage() {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({ id: userId, role: 'customer' });
+      .insert({ id: userId, role: 'customer', first_name: firstName, last_name: lastName });
 
     if (profileError) {
       setError(profileError.message);
@@ -128,6 +136,32 @@ export default function LoginPage() {
               placeholder="name@email.com"
             />
           </label>
+          {mode === 'signup' && (
+            <>
+              <label className="block space-y-2 text-sm text-neutral-700">
+                <span className="font-semibold text-charcoal">Vorname</span>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
+                  placeholder="Max"
+                />
+              </label>
+              <label className="block space-y-2 text-sm text-neutral-700">
+                <span className="font-semibold text-charcoal">Nachname</span>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
+                  placeholder="Mustermann"
+                />
+              </label>
+            </>
+          )}
           <label className="block space-y-2 text-sm text-neutral-700">
             <span className="font-semibold text-charcoal">Passwort</span>
             <input
@@ -140,6 +174,20 @@ export default function LoginPage() {
               placeholder="Mindestens 6 Zeichen"
             />
           </label>
+          {mode === 'signup' && (
+            <label className="block space-y-2 text-sm text-neutral-700">
+              <span className="font-semibold text-charcoal">Passwort bestätigen</span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
+                placeholder="Passwort erneut eingeben"
+              />
+            </label>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
