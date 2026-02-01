@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies, headers } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import { bookingSchema, ensureProfile } from '@/lib/appointments';
 import { getSupabaseServiceRoleClient } from '@/lib/supabase-server';
 
@@ -14,7 +14,29 @@ export async function GET() {
     );
   }
 
-  const supabase = createRouteHandlerClient({ cookies });
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name, value, options) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name, options) {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+        }
+      },
+      headers: {
+        get(name) {
+          return headers().get(name) ?? undefined;
+        }
+      }
+    }
+  );
   const {
     data: { session }
   } = await supabase.auth.getSession();
@@ -55,7 +77,29 @@ export async function POST(req: NextRequest) {
 
   const { name, email, appointmentType, date, time, channel } = parsed.data;
 
-  const supabase = createRouteHandlerClient({ cookies });
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name, value, options) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name, options) {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+        }
+      },
+      headers: {
+        get(name) {
+          return headers().get(name) ?? undefined;
+        }
+      }
+    }
+  );
   const {
     data: { session }
   } = await supabase.auth.getSession();

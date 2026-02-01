@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import BookingForm from '@/components/booking/booking-form';
 import { translations, normalizeLanguage } from '@/lib/i18n';
+import { getSupabaseServerComponentClient } from '@/lib/supabase-server';
 
 export const metadata = {
   title: 'Termin buchen | Anna Kosar'
@@ -17,7 +17,7 @@ export default async function BookPage() {
   let profile: { data: { name?: string | null; email?: string | null } | null } | null = null;
 
   if (hasSupabaseEnv) {
-    const supabase = createServerComponentClient({ cookies });
+    const supabase = getSupabaseServerComponentClient();
     const {
       data: { session: s }
     } = await supabase.auth.getSession();

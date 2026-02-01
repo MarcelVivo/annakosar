@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { format } from 'date-fns';
 import { translations, normalizeLanguage } from '@/lib/i18n';
+import { getSupabaseServerComponentClient } from '@/lib/supabase-server';
 
 export const metadata = {
   title: 'Meine Termine | Anna Kosar'
@@ -27,7 +27,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = getSupabaseServerComponentClient();
   const {
     data: { session }
   } = await supabase.auth.getSession();

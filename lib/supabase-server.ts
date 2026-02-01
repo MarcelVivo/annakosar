@@ -1,24 +1,65 @@
-import { cookies } from 'next/headers';
-import {
-  createRouteHandlerClient,
-  createServerComponentClient,
-  createMiddlewareClient
-} from '@supabase/auth-helpers-nextjs';
+import { cookies, headers } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const createCookieAdapter = (cookieStore: ReturnType<typeof cookies>) => ({
+  get(name: string) {
+    return cookieStore.get(name)?.value;
+  },
+  set(name: string, value: string, options: CookieOptions) {
+    cookieStore.set({ name, value, ...options });
+  },
+  remove(name: string, options: CookieOptions) {
+    cookieStore.set({ name, value: '', ...options, maxAge: 0 });
+  }
+});
+
+const headerAdapter = {
+  get(name: string) {
+    return headers().get(name) ?? undefined;
+  }
+};
+
 export const getSupabaseRouteClient = () =>
-  createRouteHandlerClient({ cookies });
+  createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: createCookieAdapter(cookies()),
+    headers: headerAdapter
+  });
 
 export const getSupabaseServerComponentClient = () =>
-  createServerComponentClient({ cookies });
+  createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: createCookieAdapter(cookies()),
+    headers: headerAdapter
+  });
 
-export const getSupabaseMiddlewareClient = (req: any, res: any) =>
-  createMiddlewareClient({ req, res });
+export const getSupabaseMiddlewareClient = (req: NextRequest, res: NextResponse) =>
+  createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return req.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options: CookieOptions) {
+        res.cookies.set({ name, value, ...options });
+      },
+      remove(name: string, options: CookieOptions) {
+        res.cookies.set({ name, value: '', ...options, maxAge: 0 });
+      }
+    },
+    headers: {
+      get(name: string) {
+        return req.headers.get(name) ?? undefined;
+      }
+    }
+  });
 
 export const getSupabaseServiceRoleClient = () => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       auth: { autoRefreshToken: false, persistSession: false }
