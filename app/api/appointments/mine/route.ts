@@ -1,0 +1,34 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function GET(req: NextRequest) {
+  const userId = req.headers.get('x-user-id');
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Nicht autorisiert' },
+      { status: 401 }
+    );
+  }
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('id, date, time, type')
+    .eq('user_id', userId)
+    .order('date', { ascending: true })
+    .order('time', { ascending: true });
+
+  if (error) {
+    return NextResponse.json(
+      { error: 'Termine konnten nicht geladen werden' },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({ appointments: data });
+}
