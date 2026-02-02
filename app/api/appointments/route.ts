@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
+const supabase = createSupabaseServerClient();
+
 const bookingSchema = z.object({
   appointmentType: z.enum(['free_intro', 'session']),
   channel: z.enum(['zoom', 'teams']),
@@ -13,7 +15,6 @@ const bookingSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
   const {
     data: { session },
     error: sessionError
@@ -34,7 +35,6 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
   const {
     data: { session },
     error: sessionError
