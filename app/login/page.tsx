@@ -21,9 +21,18 @@ export default function LoginPage() {
 
   const resetMessages = () => setError(null);
 
+  // --------------------
+  // LOGIN
+  // --------------------
   const handleLogin = async () => {
     resetMessages();
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    const { data, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
     if (signInError) {
       setError(signInError.message);
       return;
@@ -46,18 +55,28 @@ export default function LoginPage() {
       return;
     }
 
-    const role = profile?.role;
-    router.push(role === 'admin' ? '/dashboard' : '/book');
+    router.push(profile?.role === 'admin' ? '/dashboard' : '/book');
   };
 
+  // --------------------
+  // REGISTRIERUNG
+  // --------------------
   const handleSignup = async () => {
     resetMessages();
+
     if (password !== confirmPassword) {
       setError('Passwörter stimmen nicht überein.');
       return;
     }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: 'https://www.annakosar.com/login',
+      },
+    });
+
     if (signUpError) {
       setError(signUpError.message);
       return;
@@ -71,7 +90,12 @@ export default function LoginPage() {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({ id: userId, role: 'customer', first_name: firstName, last_name: lastName });
+      .insert({
+        id: userId,
+        role: 'customer',
+        first_name: firstName,
+        last_name: lastName,
+      });
 
     if (profileError) {
       setError(profileError.message);
@@ -84,21 +108,25 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     startTransition(async () => {
-      if (mode === 'login') {
-        await handleLogin();
-      } else {
-        await handleSignup();
-      }
+      mode === 'login' ? await handleLogin() : await handleSignup();
     });
   };
 
+  // --------------------
+  // UI
+  // --------------------
   return (
     <div className="grid gap-10 md:grid-cols-[1.1fr_1fr]">
       <div className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.18em] text-gold">Kunden-Login</p>
-        <h1 className="font-heading text-4xl text-charcoal">Sicherer Zugang zu Ihren Terminen.</h1>
+        <p className="text-sm uppercase tracking-[0.18em] text-gold">
+          Kunden-Login
+        </p>
+        <h1 className="font-heading text-4xl text-charcoal">
+          Sicherer Zugang zu Ihren Terminen.
+        </h1>
         <p className="text-lg text-neutral-700">
-          Melden Sie sich mit E-Mail und Passwort an oder erstellen Sie ein Konto, um Termine zu buchen.
+          Melden Sie sich mit E-Mail und Passwort an oder erstellen Sie ein
+          Konto, um Termine zu buchen.
         </p>
       </div>
 
@@ -108,7 +136,9 @@ export default function LoginPage() {
             type="button"
             onClick={() => setMode('login')}
             className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold ${
-              mode === 'login' ? 'bg-white shadow text-charcoal' : 'text-neutral-600'
+              mode === 'login'
+                ? 'bg-white shadow text-charcoal'
+                : 'text-neutral-600'
             }`}
           >
             Einloggen
@@ -117,7 +147,9 @@ export default function LoginPage() {
             type="button"
             onClick={() => setMode('signup')}
             className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold ${
-              mode === 'signup' ? 'bg-white shadow text-charcoal' : 'text-neutral-600'
+              mode === 'signup'
+                ? 'bg-white shadow text-charcoal'
+                : 'text-neutral-600'
             }`}
           >
             Registrieren
@@ -125,66 +157,65 @@ export default function LoginPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <label className="block space-y-2 text-sm text-neutral-700">
-            <span className="font-semibold text-charcoal">E-Mail</span>
+          <label className="block space-y-2 text-sm">
+            <span className="font-semibold">E-Mail</span>
             <input
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
-              placeholder="name@email.com"
+              className="w-full rounded-lg border px-3 py-2"
             />
           </label>
+
           {mode === 'signup' && (
             <>
-              <label className="block space-y-2 text-sm text-neutral-700">
-                <span className="font-semibold text-charcoal">Vorname</span>
+              <label className="block space-y-2 text-sm">
+                <span className="font-semibold">Vorname</span>
                 <input
                   type="text"
+                  required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  required
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
-                  placeholder="Max"
+                  className="w-full rounded-lg border px-3 py-2"
                 />
               </label>
-              <label className="block space-y-2 text-sm text-neutral-700">
-                <span className="font-semibold text-charcoal">Nachname</span>
+
+              <label className="block space-y-2 text-sm">
+                <span className="font-semibold">Nachname</span>
                 <input
                   type="text"
+                  required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  required
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
-                  placeholder="Mustermann"
+                  className="w-full rounded-lg border px-3 py-2"
                 />
               </label>
             </>
           )}
-          <label className="block space-y-2 text-sm text-neutral-700">
-            <span className="font-semibold text-charcoal">Passwort</span>
+
+          <label className="block space-y-2 text-sm">
+            <span className="font-semibold">Passwort</span>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
-              placeholder="Mindestens 6 Zeichen"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
             />
           </label>
+
           {mode === 'signup' && (
-            <label className="block space-y-2 text-sm text-neutral-700">
-              <span className="font-semibold text-charcoal">Passwort bestätigen</span>
+            <label className="block space-y-2 text-sm">
+              <span className="font-semibold">Passwort bestätigen</span>
               <input
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2"
-                placeholder="Passwort erneut eingeben"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-lg border px-3 py-2"
               />
             </label>
           )}
@@ -194,7 +225,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full rounded-full bg-gold px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-black shadow-subtle transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-full bg-gold py-3 font-semibold uppercase"
           >
             {isPending
               ? 'Bitte warten…'
