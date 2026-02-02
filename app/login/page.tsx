@@ -19,57 +19,31 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const resetMessages = () => setError(null);
-
-  // --------------------
-  // LOGIN
-  // --------------------
   const handleLogin = async () => {
-    resetMessages();
+    setError(null);
 
-    const { data, error: signInError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (signInError) {
-      setError(signInError.message);
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    const userId = data.user?.id;
-    if (!userId) {
-      setError('Login fehlgeschlagen.');
-      return;
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-
-    if (profileError) {
-      setError(profileError.message);
-      return;
-    }
-
-    router.push(profile?.role === 'admin' ? '/dashboard' : '/book');
+    router.push('/book');
   };
 
-  // --------------------
-  // REGISTRIERUNG
-  // --------------------
   const handleSignup = async () => {
-    resetMessages();
+    setError(null);
 
     if (password !== confirmPassword) {
       setError('Passwörter stimmen nicht überein.');
       return;
     }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -77,8 +51,8 @@ export default function LoginPage() {
       },
     });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (error) {
+      setError(error.message);
       return;
     }
 
@@ -105,136 +79,74 @@ export default function LoginPage() {
     router.push('/book');
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
       mode === 'login' ? await handleLogin() : await handleSignup();
     });
   };
 
-  // --------------------
-  // UI
-  // --------------------
   return (
-    <div className="grid gap-10 md:grid-cols-[1.1fr_1fr]">
-      <div className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.18em] text-gold">
-          Kunden-Login
-        </p>
-        <h1 className="font-heading text-4xl text-charcoal">
-          Sicherer Zugang zu Ihren Terminen.
-        </h1>
-        <p className="text-lg text-neutral-700">
-          Melden Sie sich mit E-Mail und Passwort an oder erstellen Sie ein
-          Konto, um Termine zu buchen.
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setMode('login')}>
+          Einloggen
+        </button>
+        <button type="button" onClick={() => setMode('signup')}>
+          Registrieren
+        </button>
       </div>
 
-      <div className="card p-6 space-y-4">
-        <div className="flex gap-2 rounded-full bg-neutral-100 p-1">
-          <button
-            type="button"
-            onClick={() => setMode('login')}
-            className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold ${
-              mode === 'login'
-                ? 'bg-white shadow text-charcoal'
-                : 'text-neutral-600'
-            }`}
-          >
-            Einloggen
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('signup')}
-            className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold ${
-              mode === 'signup'
-                ? 'bg-white shadow text-charcoal'
-                : 'text-neutral-600'
-            }`}
-          >
-            Registrieren
-          </button>
-        </div>
+      <input
+        type="email"
+        placeholder="E-Mail"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <label className="block space-y-2 text-sm">
-            <span className="font-semibold">E-Mail</span>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
-            />
-          </label>
+      {mode === 'signup' && (
+        <>
+          <input
+            type="text"
+            placeholder="Vorname"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+          />
+          <input
+            type="text"
+            placeholder="Nachname"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+        </>
+      )}
 
-          {mode === 'signup' && (
-            <>
-              <label className="block space-y-2 text-sm">
-                <span className="font-semibold">Vorname</span>
-                <input
-                  type="text"
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-lg border px-3 py-2"
-                />
-              </label>
+      <input
+        type="password"
+        placeholder="Passwort"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
 
-              <label className="block space-y-2 text-sm">
-                <span className="font-semibold">Nachname</span>
-                <input
-                  type="text"
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-lg border px-3 py-2"
-                />
-              </label>
-            </>
-          )}
+      {mode === 'signup' && (
+        <input
+          type="password"
+          placeholder="Passwort bestätigen"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+      )}
 
-          <label className="block space-y-2 text-sm">
-            <span className="font-semibold">Passwort</span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
-            />
-          </label>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
-          {mode === 'signup' && (
-            <label className="block space-y-2 text-sm">
-              <span className="font-semibold">Passwort bestätigen</span>
-              <input
-                type="password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2"
-              />
-            </label>
-          )}
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-full bg-gold py-3 font-semibold uppercase"
-          >
-            {isPending
-              ? 'Bitte warten…'
-              : mode === 'login'
-              ? 'Einloggen'
-              : 'Registrieren'}
-          </button>
-        </form>
-      </div>
-    </div>
+      <button type="submit" disabled={isPending}>
+        {mode === 'login' ? 'Einloggen' : 'Registrieren'}
+      </button>
+    </form>
   );
 }
