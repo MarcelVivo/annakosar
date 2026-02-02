@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Session } from '@supabase/supabase-js';
 import clsx from 'clsx';
-import type { Slot } from '@/lib/appointments';
 import { useLanguage } from '@/components/layout/language-provider';
 
 interface Props {
@@ -24,7 +23,7 @@ export default function BookingForm({ session, profile }: Props) {
   const [appointmentType, setAppointmentType] = useState<'free_intro' | 'session'>('session');
   const [channel, setChannel] = useState<'zoom' | 'teams'>('zoom');
   const [selectedDate, setSelectedDate] = useState<string>(todayIso());
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<string[]>([]);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [name, setName] = useState<string>(profile?.name ?? '');
   const [email, setEmail] = useState<string>(profile?.email ?? session?.user.email ?? '');
@@ -43,7 +42,7 @@ export default function BookingForm({ session, profile }: Props) {
       const res = await fetch(`/api/appointments/slots?date=${date}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Slots konnten nicht geladen werden');
-      setSlots(data.slots);
+      setSlots(Array.isArray(data.slots) ? data.slots : []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,16 +71,14 @@ export default function BookingForm({ session, profile }: Props) {
 
     startTransition(async () => {
       try {
-        const res = await fetch('/api/appointments', {
+        const res = await fetch('/api/appointments/book', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            appointmentType,
-            channel,
+            userId: session.user.id,
             date: selectedDate,
             time: selectedTime,
-            name,
-            email
+            type: appointmentType
           })
         });
         const data = await res.json();
@@ -157,21 +154,18 @@ export default function BookingForm({ session, profile }: Props) {
               {slots.length === 0 && !loadingSlots && (
                 <p className="col-span-3 text-sm text-neutral-600">{t('bookingForm.noSlots')}</p>
               )}
-              {slots.map((slot) => (
+              {slots.map((time) => (
                 <button
                   type="button"
-                  key={slot.time}
-                  onClick={() => slot.available && setSelectedTime(slot.time)}
+                  key={time}
+                  onClick={() => setSelectedTime(time)}
                   className={clsx(
                     'rounded-lg border px-3 py-2 text-sm transition',
-                    slot.available
-                      ? 'border-neutral-300 text-charcoal hover:border-gold hover:text-gold'
-                      : 'cursor-not-allowed border-neutral-200 bg-neutral-50 text-neutral-400',
-                    selectedTime === slot.time && 'border-gold bg-gold/10 text-gold'
+                    'border-neutral-300 text-charcoal hover:border-gold hover:text-gold',
+                    selectedTime === time && 'border-gold bg-gold/10 text-gold'
                   )}
-                  disabled={!slot.available}
                 >
-                  {slot.time}{timeSuffix ? ` ${timeSuffix}` : ''}
+                  {time}{timeSuffix ? ` ${timeSuffix}` : ''}
                 </button>
               ))}
             </div>

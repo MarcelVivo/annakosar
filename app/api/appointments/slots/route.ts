@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { generateSlotsForDate } from '@/lib/appointments';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -10,17 +14,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Datum fehlt' }, { status: 400 });
   }
 
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('appointments')
-    .select('time, status')
-    .eq('date', date)
-    .neq('status', 'cancelled');
+    .select('time')
+    .eq('date', date);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const booked = data?.map((d) => d.time) ?? [];
 
-  const bookedTimes = (data ?? []).map((a) => a.time.slice(0, 5));
-  const slots = generateSlotsForDate(date, bookedTimes);
+  const allSlots = [
+    '09:00','10:00','11:00','13:00','14:00','15:00','16:00'
+  ];
 
-  return NextResponse.json({ slots });
+  const available = allSlots.filter((t) => !booked.includes(t));
+
+  return NextResponse.json({ slots: available });
 }
