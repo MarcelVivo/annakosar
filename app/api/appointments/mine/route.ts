@@ -2,9 +2,8 @@ export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-const supabase = createSupabaseServerClient();
-
 export async function GET(req: NextRequest) {
+  const supabase = createSupabaseServerClient();
   const userId = req.headers.get('x-user-id');
 
   if (!userId) {

@@ -2,9 +2,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-const supabase = createSupabaseServerClient();
-
 export async function GET() {
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('appointments')
     .select(`

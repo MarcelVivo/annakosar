@@ -2,9 +2,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-const supabase = createSupabaseServerClient();
-
 export async function POST() {
+  const supabase = createSupabaseServerClient();
   try {
     await supabase.auth.signOut();
     return NextResponse.json({ success: true });
