@@ -14,7 +14,6 @@ Produktionsreife Next.js (App Router, TypeScript) Anwendung für die Online-Psyc
 - Auth: Supabase Email (Magic Link). Callback-Route: `/api/auth/callback`.
 - Tabellen: `users`, `appointments` (siehe `supabase/schema.sql`).
 - RLS: Nur eigene Datensätze sichtbar/bearbeitbar.
-- Edge Function (optional): `send-confirmation` wird nach erfolgreicher Buchung aufgerufen, wenn `SUPABASE_SERVICE_ROLE_KEY` gesetzt ist.
 
 ## Termine & Logik
 - Slots: Stundenraster 08:00–18:00, blockiert wenn Termin existiert oder Zeit in der Vergangenheit liegt.

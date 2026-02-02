@@ -53,4 +53,4 @@ create policy "Users update own appointments" on public.appointments
 create policy "Users delete own appointments" on public.appointments
   for delete using (auth.uid() = user_id);
 
-comment on column public.appointments.meeting_link is 'Zoom oder Microsoft Teams Link. Kann per Edge Function gesetzt werden.';
+comment on column public.appointments.meeting_link is 'Zoom oder Microsoft Teams Link.';
