@@ -12,6 +12,11 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const { t } = useLanguage();
 
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  };
+
   const nav = [
     { href: '/', label: t('nav.home') },
     { href: '/about', label: t('nav.about') },
@@ -81,6 +86,14 @@ export default function Header() {
                 >
                   {t('nav.cta')}
                 </Link>
+              </li>
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full bg-neutral-200 px-4 py-2 text-sm font-semibold"
+                >
+                  Logout
+                </button>
               </li>
             </ul>
           </nav>
