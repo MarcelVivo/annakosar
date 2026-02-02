@@ -40,8 +40,13 @@ export default function AdminDashboard() {
   if (loading) return <p>Lade Termine…</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <h1 className="text-2xl font-semibold mb-6">Terminübersicht</h1>
+    <div className="max-w-5xl mx-auto p-8 space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Terminübersicht</h1>
+        <a href="/dashboard/calendar" className="underline">
+          Kalender (Woche)
+        </a>
+      </div>
 
       <table className="w-full border">
         <thead>

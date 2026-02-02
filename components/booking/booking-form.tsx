@@ -78,7 +78,8 @@ export default function BookingForm({ session, profile }: Props) {
             userId: session.user.id,
             date: selectedDate,
             time: selectedTime,
-            type: appointmentType
+            type: appointmentType,
+            customerEmail: email
           })
         });
         const data = await res.json();
